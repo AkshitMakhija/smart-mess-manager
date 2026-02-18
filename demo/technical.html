@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Implementation - Smart Mess Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="page-title">Technical Implementation</h1>
+            <nav>
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="student-dashboard.html" class="nav-link">Student</a>
+                <a href="admin-dashboard.html" class="nav-link">Admin</a>
+            </nav>
+        </header>
+
+        <main class="technical-content">
+            <section class="tech-section">
+                <h2>Crowd Estimation using Camera</h2>
+                <p>
+                    The system uses cameras installed at the mess entrance to monitor the number of students 
+                    entering and exiting. Computer vision algorithms analyze the video feed in real-time to 
+                    count people. This data is processed to determine the current crowd level (Low, Medium, 
+                    or High) which is then displayed on the student dashboard.
+                </p>
+                <p>
+                    The camera captures images at regular intervals, and image processing techniques identify 
+                    and count individuals. This count is updated continuously to provide accurate real-time 
+                    information to students.
+                </p>
+            </section>
+
+            <section class="tech-section">
+                <h2>Basic Predictive Analysis using Historical Data</h2>
+                <p>
+                    The system collects data about crowd patterns over time - recording how many students 
+                    visit the mess at different hours of the day and days of the week. This historical 
+                    data is stored in a database.
+                </p>
+                <p>
+                    Using simple statistical methods, the system analyzes past patterns to predict future 
+                    rush times. For example, if data shows that 1:00 PM typically has the highest crowd 
+                    on weekdays, the system predicts this as a peak hour. These predictions help students 
+                    plan their meal times better.
+                </p>
+            </section>
+
+            <section class="tech-section">
+                <h2>Backend Server handling Data</h2>
+                <p>
+                    A backend server acts as the central component that receives data from various sources 
+                    (cameras, mobile app, web interface) and processes it. The server stores all 
+                    information in a database including crowd counts, student feedback, food voting data, 
+                    and menu information.
+                </p>
+                <p>
+                    When students access the dashboard, their devices send requests to this server. The 
+                    server retrieves the latest data from the database and sends it back to be displayed. 
+                    Similarly, when students submit feedback or vote, the data is sent to the server and 
+                    stored for administrators to review.
+                </p>
+            </section>
+
+            <section class="tech-section">
+                <h2>Mobile App Integration Concept</h2>
+                <p>
+                    A mobile application provides students with convenient access to mess information on 
+                    their smartphones. The app connects to the same backend server as the web dashboard, 
+                    allowing students to check crowd levels, view menus, and submit feedback while on the go.
+                </p>
+                <p>
+                    The mobile app can also send push notifications to alert students about peak hours or 
+                    menu changes. This integration ensures that students have access to real-time information 
+                    regardless of whether they use a computer or mobile device.
+                </p>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p><strong>Student:</strong> Akshit Makhija (2427030065)</p>
+                <p><strong>Guide:</strong> Ms. Surbhi Syal</p>
+                <p><strong>University:</strong> Manipal University Jaipur</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

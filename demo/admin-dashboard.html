@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Smart Mess Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="page-title">Admin Dashboard</h1>
+            <nav>
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="student-dashboard.html" class="nav-link">Student</a>
+                <a href="technical.html" class="nav-link">Technical</a>
+            </nav>
+        </header>
+
+        <main class="dashboard-content">
+            <!-- Total Students Today -->
+            <section class="card">
+                <h2>Total Students Today</h2>
+                <div class="stat-display">
+                    <div class="stat-number" id="totalStudents">0</div>
+                    <p class="stat-label">students visited today</p>
+                </div>
+            </section>
+
+            <!-- Peak Hour Prediction -->
+            <section class="card">
+                <h2>Peak Hour Prediction</h2>
+                <div class="peak-hour">
+                    <p class="peak-text">Today's peak hours:</p>
+                    <div class="peak-chart">
+                        <div class="peak-bar" style="height: 35%;" data-hour="8-9 AM">
+                            <span class="peak-value">35%</span>
+                        </div>
+                        <div class="peak-bar" style="height: 75%;" data-hour="12-1 PM">
+                            <span class="peak-value">75%</span>
+                        </div>
+                        <div class="peak-bar" style="height: 90%;" data-hour="1-2 PM">
+                            <span class="peak-value">90%</span>
+                        </div>
+                        <div class="peak-bar" style="height: 50%;" data-hour="6-7 PM">
+                            <span class="peak-value">50%</span>
+                        </div>
+                        <div class="peak-bar" style="height: 80%;" data-hour="8-9 PM">
+                            <span class="peak-value">80%</span>
+                        </div>
+                    </div>
+                    <div class="peak-labels">
+                        <span>8-9 AM</span>
+                        <span>12-1 PM</span>
+                        <span>1-2 PM</span>
+                        <span>6-7 PM</span>
+                        <span>8-9 PM</span>
+                    </div>
+                    <p class="peak-summary">Highest traffic expected at <strong>1-2 PM</strong></p>
+                </div>
+            </section>
+
+            <!-- Food Wastage Percentage -->
+            <section class="card">
+                <h2>Food Wastage Percentage</h2>
+                <div class="wastage-display">
+                    <div class="wastage-circle">
+                        <div class="wastage-percentage" id="wastagePercent">15%</div>
+                        <div class="wastage-label">of total food</div>
+                    </div>
+                    <div class="wastage-bar">
+                        <div class="wastage-fill" style="width: 15%;"></div>
+                    </div>
+                    <p class="wastage-note">Based on today's consumption data</p>
+                </div>
+            </section>
+
+            <!-- Feedback Overview -->
+            <section class="card">
+                <h2>Feedback Overview</h2>
+                <div class="feedback-overview">
+                    <div class="feedback-stats">
+                        <div class="feedback-stat">
+                            <span class="stat-value" id="totalFeedback">0</span>
+                            <span class="stat-desc">Total Feedback</span>
+                        </div>
+                        <div class="feedback-stat">
+                            <span class="stat-value" id="positiveFeedback">0</span>
+                            <span class="stat-desc">Positive</span>
+                        </div>
+                        <div class="feedback-stat">
+                            <span class="stat-value" id="negativeFeedback">0</span>
+                            <span class="stat-desc">Needs Improvement</span>
+                        </div>
+                    </div>
+                    <div class="recent-feedback" id="recentFeedback">
+                        <h3>Recent Feedback</h3>
+                        <div class="feedback-list" id="feedbackList">
+                            <p class="no-feedback">No feedback submitted yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p><strong>Student:</strong> Akshit Makhija (2427030065)</p>
+                <p><strong>Guide:</strong> Ms. Surbhi Syal</p>
+                <p><strong>University:</strong> Manipal University Jaipur</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Smart Mess Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="page-title">Student Dashboard</h1>
+            <nav>
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="admin-dashboard.html" class="nav-link">Admin</a>
+                <a href="technical.html" class="nav-link">Technical</a>
+            </nav>
+        </header>
+
+        <main class="dashboard-content">
+            <!-- Current Crowd Level -->
+            <section class="card">
+                <h2>Current Crowd Level</h2>
+                <div class="crowd-level" id="crowdLevel">
+                    <span class="crowd-indicator" id="crowdIndicator">Medium</span>
+                    <div class="crowd-bar">
+                        <div class="crowd-fill" id="crowdFill"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Predicted Rush Time -->
+            <section class="card">
+                <h2>Predicted Rush Time</h2>
+                <div class="rush-time">
+                    <p class="rush-text" id="rushTime">Next rush expected in: <strong>45 minutes</strong></p>
+                    <div class="simple-chart">
+                        <div class="chart-bar" style="height: 30%;" data-time="8:00 AM"></div>
+                        <div class="chart-bar" style="height: 60%;" data-time="12:00 PM"></div>
+                        <div class="chart-bar active" style="height: 85%;" data-time="1:00 PM"></div>
+                        <div class="chart-bar" style="height: 40%;" data-time="6:00 PM"></div>
+                        <div class="chart-bar" style="height: 70%;" data-time="8:00 PM"></div>
+                    </div>
+                    <div class="chart-labels">
+                        <span>8 AM</span>
+                        <span>12 PM</span>
+                        <span>1 PM</span>
+                        <span>6 PM</span>
+                        <span>8 PM</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Today's Menu -->
+            <section class="card">
+                <h2>Today's Menu</h2>
+                <div class="menu-section">
+                    <div class="meal-item">
+                        <h3>Breakfast</h3>
+                        <ul>
+                            <li>Poha</li>
+                            <li>Aloo Paratha</li>
+                            <li>Tea/Coffee</li>
+                        </ul>
+                    </div>
+                    <div class="meal-item">
+                        <h3>Lunch</h3>
+                        <ul>
+                            <li>Dal Fry</li>
+                            <li>Paneer Butter Masala</li>
+                            <li>Jeera Rice</li>
+                            <li>Roti</li>
+                        </ul>
+                    </div>
+                    <div class="meal-item">
+                        <h3>Dinner</h3>
+                        <ul>
+                            <li>Dal Tadka</li>
+                            <li>Mix Vegetable</li>
+                            <li>Rice</li>
+                            <li>Roti</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Food Voting -->
+            <section class="card">
+                <h2>Food Voting</h2>
+                <p class="vote-description">Rate today's meals:</p>
+                <div class="voting-section">
+                    <div class="vote-item">
+                        <span>Lunch - Paneer Butter Masala</span>
+                        <div class="vote-buttons">
+                            <button class="btn-vote btn-like" onclick="vote('paneer', 'like')">👍 Like</button>
+                            <button class="btn-vote btn-dislike" onclick="vote('paneer', 'dislike')">👎 Dislike</button>
+                        </div>
+                        <div class="vote-count" id="vote-paneer">0 likes, 0 dislikes</div>
+                    </div>
+                    <div class="vote-item">
+                        <span>Dinner - Mix Vegetable</span>
+                        <div class="vote-buttons">
+                            <button class="btn-vote btn-like" onclick="vote('vegetable', 'like')">👍 Like</button>
+                            <button class="btn-vote btn-dislike" onclick="vote('vegetable', 'dislike')">👎 Dislike</button>
+                        </div>
+                        <div class="vote-count" id="vote-vegetable">0 likes, 0 dislikes</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feedback Form -->
+            <section class="card">
+                <h2>Feedback</h2>
+                <form class="feedback-form" id="feedbackForm" onsubmit="submitFeedback(event)">
+                    <div class="form-group">
+                        <label for="feedbackName">Name:</label>
+                        <input type="text" id="feedbackName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="feedbackMessage">Message:</label>
+                        <textarea id="feedbackMessage" name="message" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </form>
+                <div id="feedbackSuccess" class="success-message" style="display: none;">
+                    Thank you for your feedback!
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p><strong>Student:</strong> Akshit Makhija (2427030065)</p>
+                <p><strong>Guide:</strong> Ms. Surbhi Syal</p>
+                <p><strong>University:</strong> Manipal University Jaipur</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
