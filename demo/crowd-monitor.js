@@ -650,6 +650,28 @@ function updateMetricsDisplay(count, confidenceScore, latencyMs) {
         lastUpdatedEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
+    // 4. Update Live Seating Impact Widgets
+    const totalSeats = 250;
+    const freeSeats = Math.max(0, totalSeats - count);
+    const pctOccupied = Math.min(100, Math.round((count / totalSeats) * 100));
+
+    const monFreeEl = document.getElementById('monitorSeatsFree');
+    if (monFreeEl) {
+        monFreeEl.textContent = `${freeSeats} / ${totalSeats}`;
+    }
+
+    const monPctEl = document.getElementById('monitorSeatsPct');
+    if (monPctEl) {
+        monPctEl.textContent = `${pctOccupied}% Occupied`;
+    }
+
+    const monWaitEl = document.getElementById('monitorQueueWait');
+    if (monWaitEl) {
+        if (count <= 5) monWaitEl.textContent = '< 1 min (Fast)';
+        else if (count <= 15) monWaitEl.textContent = '~2 - 3 mins';
+        else monWaitEl.textContent = '~8 - 12 mins (Rush)';
+    }
+
     // 4. Broadcast / Persist to localStorage for Student Dashboard integration
     try {
         const payload = {

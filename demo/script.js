@@ -1,34 +1,35 @@
 /**
  * Smart Mess Manager - Dashboard & Client Script
  * ----------------------------------------------------
- * Handles:
- * 1. Student Dashboard crowd level sync with Live Crowd Monitor
- * 2. Food rating & voting persistence in localStorage
- * 3. Student feedback submission and admin sentiment categorization
- * 4. Admin dashboard metrics, wastage, and recent feedback rendering
+ * Features:
+ * 1. Live Seat Availability & Capacity Tracker (synced with Live Camera)
+ * 2. Interactive Meal Tabs with Nutrition & Allergen Tags
+ * 3. Real-time Campus Clock & Meal Service Countdown Ticker
+ * 4. Food Quality Voting (likes/dislikes) stored in localStorage
+ * 5. Student Feedback Form with Sentiment Classification
+ * 6. Admin Analytics & Wastage Audit
  */
 
-// Global Storage Keys
 const STORAGE_KEYS = {
     VOTING: 'smm_voting_data',
     FEEDBACK: 'smm_feedback_data',
     LIVE_CROWD: 'smm_live_crowd'
 };
 
-// Default voting state
+const TOTAL_MESS_SEATS = 250;
+
+// Default initial voting data
 let votingData = {
     paneer: { likes: 142, dislikes: 18 },
     vegetable: { likes: 98, dislikes: 31 }
 };
 
-// Feedback list
 let feedbackData = [];
 
 // ==========================================
 // 1. LIFECYCLE INITIALIZATION
 // ==========================================
 document.addEventListener('DOMContentLoaded', function () {
-    // Check page context
     if (document.querySelector('#crowdLevel')) {
         initStudentDashboard();
     }
@@ -36,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initAdminDashboard();
     }
 
-    // Listen to cross-tab updates from Live Crowd Monitor
+    // Cross-tab storage listener
     window.addEventListener('storage', (e) => {
         if (e.key === STORAGE_KEYS.LIVE_CROWD && document.querySelector('#crowdLevel')) {
             syncLiveCrowdState();
@@ -45,29 +46,116 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ==========================================
-// 2. STUDENT DASHBOARD
+// 2. STUDENT DASHBOARD INITIALIZATION
 // ==========================================
 function initStudentDashboard() {
     loadVotingData();
     loadFeedbackData();
-
-    // Initial crowd check
     syncLiveCrowdState();
 
-    // Check every 3 seconds for live camera updates
-    setInterval(syncLiveCrowdState, 3000);
+    // Start Live Clock & Service Countdown Ticker
+    startCampusClockTicker();
+
+    // Poll live crowd state every 2 seconds
+    setInterval(syncLiveCrowdState, 2000);
 }
 
-/**
- * Reads state from Live Crowd Monitor (if active) or applies realistic baseline
- */
+// ==========================================
+// 3. FEATURE 4: CAMPUS CLOCK & SERVICE COUNTDOWN
+// ==========================================
+function startCampusClockTicker() {
+    updateCampusClock();
+    setInterval(updateCampusClock, 1000);
+}
+
+function updateCampusClock() {
+    const clockEl = document.getElementById('campusLiveClock');
+    const statusTitleEl = document.getElementById('serviceStatusTitle');
+    const statusSubEl = document.getElementById('serviceTimingSub');
+    const countdownEl = document.getElementById('mealCountdownTimer');
+
+    if (!clockEl) return;
+
+    const now = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = days[now.getDay()];
+
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    clockEl.textContent = `${dayName}, ${timeStr}`;
+
+    // Determine Meal Service Slot
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const currentMins = hours * 60 + minutes;
+
+    // Service Definitions (in minutes from midnight)
+    // Breakfast: 7:30 (450) - 9:30 (570)
+    // Lunch:    12:00 (720) - 14:30 (870)
+    // Snacks:   17:00 (1020) - 18:00 (1080)
+    // Dinner:   19:30 (1170) - 21:30 (1290)
+
+    let activeService = null;
+    let closesInMins = 0;
+    let nextServiceText = '';
+
+    if (currentMins >= 450 && currentMins < 570) {
+        activeService = { name: 'Breakfast Service Active', sub: '7:30 AM – 9:30 AM • Fresh Morning Spread', endMins: 570 };
+    } else if (currentMins >= 720 && currentMins < 870) {
+        activeService = { name: 'Lunch Service Active', sub: '12:00 PM – 2:30 PM • Main Hall Counters Open', endMins: 870 };
+    } else if (currentMins >= 1020 && currentMins < 1080) {
+        activeService = { name: 'Evening Snacks Active', sub: '5:00 PM – 6:00 PM • Tea & Refreshments', endMins: 1080 };
+    } else if (currentMins >= 1170 && currentMins < 1290) {
+        activeService = { name: 'Dinner Service Active', sub: '7:30 PM – 9:30 PM • Hot Dinner Counters', endMins: 1290 };
+    } else {
+        // Between meals
+        if (currentMins < 450) {
+            nextServiceText = 'Breakfast opens at 7:30 AM';
+        } else if (currentMins < 720) {
+            nextServiceText = 'Lunch counters open at 12:00 PM';
+        } else if (currentMins < 1020) {
+            nextServiceText = 'Evening snacks served at 5:00 PM';
+        } else if (currentMins < 1170) {
+            nextServiceText = 'Dinner counters open at 7:30 PM';
+        } else {
+            nextServiceText = 'Kitchen closed for the night • Breakfast at 7:30 AM';
+        }
+    }
+
+    if (activeService) {
+        closesInMins = activeService.endMins - currentMins;
+        const secondsLeft = 59 - now.getSeconds();
+        if (statusTitleEl) statusTitleEl.textContent = activeService.name;
+        if (statusSubEl) statusSubEl.textContent = activeService.sub;
+        if (countdownEl) {
+            countdownEl.textContent = `⏱️ Closes in ${closesInMins}m ${secondsLeft.toString().padStart(2, '0')}s`;
+            countdownEl.style.color = '#fbbf24';
+        }
+    } else {
+        if (statusTitleEl) statusTitleEl.textContent = 'Mess Hall Idle (Prep in Progress)';
+        if (statusSubEl) statusSubEl.textContent = nextServiceText;
+        if (countdownEl) {
+            countdownEl.textContent = `⏳ ${nextServiceText}`;
+            countdownEl.style.color = '#94a3b8';
+        }
+    }
+}
+
+// ==========================================
+// 4. FEATURE 1: LIVE SEAT & ZONE CAPACITY CALCULATION
+// ==========================================
 function syncLiveCrowdState() {
     const indicator = document.getElementById('crowdIndicator');
     const fill = document.getElementById('crowdFill');
     const metaEl = document.getElementById('liveCrowdMeta');
     const syncBadge = document.getElementById('liveSyncBadge');
 
-    if (!indicator || !fill) return;
+    const availableSeatsEl = document.getElementById('availableSeatsCount');
+    const occupiedSeatsEl = document.getElementById('occupiedSeatsCount');
+    const capacityPercentEl = document.getElementById('capacityPercentText');
+    const capacityMeterFill = document.getElementById('capacityMeterFill');
+
+    const zoneATag = document.getElementById('zoneATag');
+    const zoneBTag = document.getElementById('zoneBTag');
 
     let liveData = null;
     try {
@@ -78,21 +166,18 @@ function syncLiveCrowdState() {
     } catch (e) {}
 
     const now = Date.now();
-    const isLiveRecent = liveData && (now - liveData.updatedAt < 45000); // within last 45s
+    const isLiveRecent = liveData && (now - liveData.updatedAt < 45000);
+
+    let count = 14;
+    let status = 'MODERATE';
+    let percentage = 45;
+    let isLiveSource = false;
 
     if (isLiveRecent) {
-        // Live camera / simulation stream is actively pushing updates!
-        const count = liveData.count;
-        const status = liveData.status; // 'LOW' | 'MODERATE' | 'HIGH'
-        const percentage = liveData.percentage;
-
-        indicator.textContent = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-        indicator.className = 'crowd-indicator ' + status.toLowerCase();
-        fill.style.width = percentage + '%';
-
-        if (metaEl) {
-            metaEl.innerHTML = `<strong>Estimated People:</strong> ${count} students &nbsp;|&nbsp; <strong>Detection Confidence:</strong> ${liveData.confidence || 88}%`;
-        }
+        count = liveData.count;
+        status = liveData.status;
+        percentage = liveData.percentage;
+        isLiveSource = true;
 
         if (syncBadge) {
             if (liveData.source === 'simulation') {
@@ -103,29 +188,108 @@ function syncLiveCrowdState() {
                 syncBadge.className = 'badge badge-live';
             }
         }
-    } else {
-        // Default realistic baseline when camera is idle
-        if (!indicator.dataset.initialized) {
-            indicator.textContent = 'Moderate';
-            indicator.className = 'crowd-indicator moderate';
-            fill.style.width = '48%';
-            indicator.dataset.initialized = 'true';
-
-            if (metaEl) {
-                metaEl.innerHTML = `<strong>Estimated People:</strong> ~12 students (Typical for this hour)`;
-            }
-            if (syncBadge) {
-                syncBadge.innerHTML = '<span>Camera Idle • Connect Live Monitor</span>';
-                syncBadge.className = 'badge';
-                syncBadge.style.background = '#1e293b';
-                syncBadge.style.color = '#94a3b8';
-            }
+        if (metaEl) {
+            metaEl.innerHTML = `<strong>Estimated People:</strong> ${count} students &nbsp;|&nbsp; <strong>Detection Confidence:</strong> ${liveData.confidence || 88}%`;
         }
+    } else {
+        count = 14;
+        status = 'MODERATE';
+        percentage = 48;
+        if (syncBadge) {
+            syncBadge.innerHTML = '<span>Camera Idle • Connect Live Monitor</span>';
+            syncBadge.className = 'badge';
+            syncBadge.style.background = '#1e293b';
+            syncBadge.style.color = '#94a3b8';
+        }
+        if (metaEl) {
+            metaEl.innerHTML = `<strong>Estimated People:</strong> ~${count} students (Typical for this hour)`;
+        }
+    }
+
+    // 1. Update Crowd Indicator Card
+    if (indicator) {
+        indicator.textContent = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+        indicator.className = 'crowd-indicator ' + status.toLowerCase();
+    }
+    if (fill) {
+        fill.style.width = percentage + '%';
+    }
+
+    // 2. Update Feature 1: Seat Availability Metrics
+    const freeSeats = Math.max(0, TOTAL_MESS_SEATS - count);
+    const capacityPct = Math.min(100, Math.round((count / TOTAL_MESS_SEATS) * 100));
+
+    if (availableSeatsEl) availableSeatsEl.textContent = freeSeats;
+    if (occupiedSeatsEl) occupiedSeatsEl.textContent = count;
+    if (capacityPercentEl) capacityPercentEl.textContent = `${capacityPct}% Full (${count}/${TOTAL_MESS_SEATS} Seats)`;
+
+    if (capacityMeterFill) {
+        capacityMeterFill.style.width = `${Math.max(5, capacityPct)}%`;
+        if (capacityPct < 30) {
+            capacityMeterFill.className = 'capacity-meter-fill low';
+        } else if (capacityPct < 70) {
+            capacityMeterFill.className = 'capacity-meter-fill moderate';
+        } else {
+            capacityMeterFill.className = 'capacity-meter-fill high';
+        }
+    }
+
+    // 3. Update Zone Density Breakdown
+    if (zoneATag) {
+        if (count <= 5) {
+            zoneATag.textContent = 'Queue Free (0m Wait)';
+            zoneATag.className = 'zone-tag fast';
+        } else if (count <= 15) {
+            zoneATag.textContent = 'Moderate Queue (~3m)';
+            zoneATag.className = 'zone-tag moderate';
+        } else {
+            zoneATag.textContent = 'Busy Queue (>7m)';
+            zoneATag.className = 'zone-tag busy';
+        }
+    }
+
+    if (zoneBTag) {
+        const freeTablePct = Math.round((freeSeats / TOTAL_MESS_SEATS) * 100);
+        zoneBTag.textContent = `${freeTablePct}% Tables Free`;
+        zoneBTag.className = freeTablePct > 60 ? 'zone-tag fast' : (freeTablePct > 25 ? 'zone-tag moderate' : 'zone-tag busy');
     }
 }
 
 // ==========================================
-// 3. FOOD VOTING SYSTEM
+// 5. FEATURE 3: INTERACTIVE MEAL TABS SWITCHER
+// ==========================================
+function switchMealTab(slotId) {
+    // Update active tab buttons
+    const buttons = document.querySelectorAll('.meal-tab-btn');
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+        const indicator = btn.querySelector('.meal-active-indicator');
+        if (indicator) indicator.remove();
+    });
+
+    // Find clicked button
+    const targetBtn = Array.from(buttons).find(b => b.getAttribute('onclick')?.includes(slotId));
+    if (targetBtn) {
+        targetBtn.classList.add('active');
+        if (slotId === 'lunch') {
+            const ind = document.createElement('span');
+            ind.className = 'meal-active-indicator';
+            targetBtn.prepend(ind);
+        }
+    }
+
+    // Switch panes
+    const panes = document.querySelectorAll('.meal-slot-pane');
+    panes.forEach(p => p.classList.remove('active'));
+
+    const targetPane = document.getElementById(`pane-${slotId}`);
+    if (targetPane) {
+        targetPane.classList.add('active');
+    }
+}
+
+// ==========================================
+// 6. FOOD VOTING SYSTEM
 // ==========================================
 function vote(item, type) {
     if (votingData[item]) {
@@ -146,7 +310,7 @@ function updateVoteDisplay(item) {
         const dislikes = votingData[item].dislikes;
         const total = likes + dislikes;
         const approval = total > 0 ? Math.round((likes / total) * 100) : 0;
-        voteCount.textContent = `${likes} likes, ${dislikes} dislikes (${approval}% approval)`;
+        voteCount.textContent = `${likes} likes, ${dislikes} dislikes (${approval}% student approval)`;
     }
 }
 
@@ -167,7 +331,7 @@ function saveVotingData() {
 }
 
 // ==========================================
-// 4. STUDENT FEEDBACK SYSTEM
+// 7. STUDENT FEEDBACK SYSTEM
 // ==========================================
 function submitFeedback(event) {
     event.preventDefault();
@@ -195,7 +359,7 @@ function submitFeedback(event) {
             successMsg.style.display = 'block';
             setTimeout(() => {
                 successMsg.style.display = 'none';
-            }, 3000);
+            }, 3500);
         }
 
         document.getElementById('feedbackForm').reset();
@@ -216,17 +380,13 @@ function saveFeedbackData() {
 }
 
 // ==========================================
-// 5. ADMIN DASHBOARD
+// 8. ADMIN DASHBOARD INITIALIZATION
 // ==========================================
 function initAdminDashboard() {
-    // Animate total students counter
     animateCounter('totalStudents', 0, 312, 1200);
-
-    // Initial load
     updateWastage();
     loadAdminFeedback();
 
-    // Check periodically
     setInterval(() => {
         updateWastage();
         loadAdminFeedback();
@@ -252,17 +412,12 @@ function animateCounter(elementId, start, end, duration) {
 }
 
 function updateWastage() {
-    // Realistic cafeteria wastage rate (11% - 15%)
     const wastage = 12;
     const percentElement = document.getElementById('wastagePercent');
     const fillElement = document.querySelector('.wastage-fill');
 
-    if (percentElement) {
-        percentElement.textContent = wastage + '%';
-    }
-    if (fillElement) {
-        fillElement.style.width = wastage + '%';
-    }
+    if (percentElement) percentElement.textContent = wastage + '%';
+    if (fillElement) fillElement.style.width = wastage + '%';
 }
 
 function loadAdminFeedback() {
@@ -275,11 +430,10 @@ function loadAdminFeedback() {
         } catch (e) {}
     }
 
-    // Default sample feedbacks if empty
     if (allFeedback.length === 0) {
         allFeedback = [
-            { name: "Rahul S.", message: "Lunch was very fresh today. Paneer butter masala was good.", timestamp: new Date(Date.now() - 3600000).toISOString() },
-            { name: "Ananya K.", message: "Queue was moving quickly around 1:15 PM.", timestamp: new Date(Date.now() - 7200000).toISOString() }
+            { name: "Rahul S. (2427030012)", message: "Lunch paneer butter masala was warm and fresh.", timestamp: new Date(Date.now() - 3600000).toISOString() },
+            { name: "Ananya K. (2427030045)", message: "Queue moved quickly around 1:15 PM.", timestamp: new Date(Date.now() - 7200000).toISOString() }
         ];
     }
 
@@ -287,13 +441,10 @@ function loadAdminFeedback() {
     const positiveFeedback = document.getElementById('positiveFeedback');
     const negativeFeedback = document.getElementById('negativeFeedback');
 
-    if (totalFeedback) {
-        totalFeedback.textContent = allFeedback.length;
-    }
+    if (totalFeedback) totalFeedback.textContent = allFeedback.length;
 
     let positive = 0;
     let negative = 0;
-
     const posWords = ['good', 'great', 'excellent', 'nice', 'fresh', 'delicious', 'tasty', 'quick', 'love'];
     const negWords = ['bad', 'poor', 'slow', 'cold', 'disappointing', 'worst', 'crowded', 'salt'];
 

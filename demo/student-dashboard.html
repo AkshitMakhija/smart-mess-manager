@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - Smart Mess Manager</title>
+    <title>Student Dining Dashboard - Smart Mess Manager</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
             <div class="header-brand">
                 <span class="brand-badge">PBL 2026</span>
                 <h1 class="page-title">Smart Mess Manager</h1>
-                <span class="campus-tag">Manipal University Jaipur</span>
+                <span class="campus-tag">Manipal University Jaipur • Central Dining Block</span>
             </div>
             <nav class="app-nav">
                 <a href="index.html" class="nav-link">Home</a>
@@ -24,49 +24,125 @@
             </nav>
         </header>
 
+        <!-- FEATURE 4: Real-Time Meal Service Countdown & Campus Live Clock -->
+        <div class="campus-live-ticker" id="serviceCountdownBanner">
+            <div class="ticker-left">
+                <span class="ticker-pulse"></span>
+                <div>
+                    <span class="ticker-status-text" id="serviceStatusTitle">Lunch Service Active</span>
+                    <span class="ticker-status-sub" id="serviceTimingSub">12:00 PM – 2:30 PM • Main Hall Counters Open</span>
+                </div>
+            </div>
+            <div class="ticker-right">
+                <div class="campus-clock" id="campusLiveClock">--:-- --</div>
+                <div class="meal-countdown-pill" id="mealCountdownTimer">⏱️ Closes in --m --s</div>
+            </div>
+        </div>
+
         <main class="dashboard-content">
 
             <!-- Card 1: Current Crowd Level & Live Camera Sync -->
             <section class="card">
-                <h2>
-                    <span>Current Crowd Level</span>
-                    <a href="live-crowd.html" class="btn btn-sm btn-secondary" style="font-size:0.75rem;">Open Live Camera Feed 🎥</a>
-                </h2>
-
-                <div class="live-crowd-sync-banner">
-                    <div id="liveSyncBadge" class="badge">
-                        <span>Checking Camera Feed...</span>
-                    </div>
-                    <span style="font-size:0.75rem; color:#64748b;">Live Edge AI Sensor</span>
+                <div class="card-header-row">
+                    <h2>
+                        <span class="card-title-icon">👥</span>
+                        <span>Mess Crowd Density</span>
+                    </h2>
+                    <a href="live-crowd.html" class="btn btn-sm btn-secondary">Open Live Feed 🎥</a>
                 </div>
 
-                <div class="crowd-level" id="crowdLevel">
-                    <span class="crowd-indicator moderate" id="crowdIndicator">Moderate</span>
-                    <div class="crowd-bar">
-                        <div class="crowd-fill" id="crowdFill" style="width: 50%;"></div>
+                <div class="live-crowd-sync-banner" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;">
+                    <div id="liveSyncBadge" class="badge">
+                        <span>Checking Camera Sensor...</span>
                     </div>
-                    <div class="live-estimate-meta" id="liveCrowdMeta">
+                    <span style="font-size:0.75rem; color:#64748b; font-weight:600;">Edge Vision Feed</span>
+                </div>
+
+                <div class="crowd-level" id="crowdLevel" style="text-align:center;">
+                    <span class="crowd-indicator moderate" id="crowdIndicator" style="display:inline-block; font-size:1.4rem; font-weight:800; padding:8px 24px; border-radius:6px; margin-bottom:14px;">Moderate</span>
+                    <div class="crowd-bar" style="width:100%; height:14px; background:#1e293b; border-radius:7px; overflow:hidden; margin-bottom:10px;">
+                        <div class="crowd-fill" id="crowdFill" style="height:100%; background:#2563eb; width:50%; transition:width 0.5s ease; border-radius:7px;"></div>
+                    </div>
+                    <div class="live-estimate-meta" id="liveCrowdMeta" style="font-size:0.85rem; color:var(--text-muted);">
                         <strong>Estimated People:</strong> ~12 students (Typical for this hour)
                     </div>
                 </div>
             </section>
 
-            <!-- Card 2: Predicted Rush Time & Traffic Distribution -->
+            <!-- FEATURE 1: Live Seat Availability & Zone Density (Directly linked to Live Camera) -->
             <section class="card">
-                <h2>Predicted Rush Time</h2>
+                <div class="card-header-row">
+                    <h2>
+                        <span class="card-title-icon">🪑</span>
+                        <span>Live Seat Availability</span>
+                    </h2>
+                    <span class="badge badge-live">Live Sensor Sync</span>
+                </div>
+
+                <div class="seats-overview-grid">
+                    <div class="seat-stat-box highlight-available">
+                        <div class="seat-stat-num" id="availableSeatsCount">236</div>
+                        <div class="seat-stat-label">Available Free Seats</div>
+                    </div>
+                    <div class="seat-stat-box">
+                        <div class="seat-stat-num" id="occupiedSeatsCount" style="color:#38bdf8;">14</div>
+                        <div class="seat-stat-label">Occupied (Total 250)</div>
+                    </div>
+                </div>
+
+                <!-- Seating Capacity Meter -->
+                <div class="capacity-progress-wrapper">
+                    <div class="capacity-progress-header">
+                        <span>Hall Seating Capacity</span>
+                        <span id="capacityPercentText">6% Full</span>
+                    </div>
+                    <div class="capacity-meter-bar">
+                        <div class="capacity-meter-fill low" id="capacityMeterFill" style="width: 6%;"></div>
+                    </div>
+                </div>
+
+                <!-- Zone Breakdown -->
+                <div class="zones-list">
+                    <div class="zone-row">
+                        <span class="zone-name">📍 Zone A: Main Meal Counter</span>
+                        <span class="zone-tag fast" id="zoneATag">Low Queue (Fast)</span>
+                    </div>
+                    <div class="zone-row">
+                        <span class="zone-name">📍 Zone B: Dining Hall Tables</span>
+                        <span class="zone-tag fast" id="zoneBTag">94% Tables Free</span>
+                    </div>
+                    <div class="zone-row">
+                        <span class="zone-name">📍 Zone C: Beverage & Handwash</span>
+                        <span class="zone-tag fast">No Waiting</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Card 3: Predicted Rush Time & Traffic Distribution -->
+            <section class="card">
+                <div class="card-header-row">
+                    <h2>
+                        <span class="card-title-icon">📈</span>
+                        <span>Predicted Rush Hours</span>
+                    </h2>
+                    <span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">Historical Pattern Model</span>
+                </div>
+
                 <div class="rush-time">
-                    <p class="rush-text" id="rushTime">Next rush expected in: <strong>45 minutes</strong> (Lunch Peak)</p>
+                    <p class="rush-text" id="rushTime" style="margin-bottom:12px; font-size:0.9rem; color:var(--text-muted);">
+                        Next major rush expected in: <strong style="color:var(--text-main);">40 minutes</strong> (Lunch Peak Slot)
+                    </p>
 
                     <div class="rush-recommendation-box">
-                        <strong>Recommendation:</strong> Visit before <strong>12:20 PM</strong> or after <strong>1:30 PM</strong> for minimal queue waiting times.
+                        <strong>Smart Recommendation:</strong> Visit before <strong>12:20 PM</strong> or after <strong>1:35 PM</strong> to bypass peak service queues.
                     </div>
 
                     <div class="simple-chart">
-                        <div class="chart-bar" style="height: 35%;" title="8:00 AM"></div>
-                        <div class="chart-bar" style="height: 65%;" title="8:45 AM"></div>
-                        <div class="chart-bar active" style="height: 88%;" title="12:45 PM (Peak)"></div>
-                        <div class="chart-bar" style="height: 45%;" title="1:30 PM"></div>
-                        <div class="chart-bar" style="height: 75%;" title="8:15 PM"></div>
+                        <div class="chart-bar" style="height: 35%;" title="8:00 AM (Breakfast)"></div>
+                        <div class="chart-bar" style="height: 65%;" title="8:45 AM (Breakfast Peak)"></div>
+                        <div class="chart-bar active" style="height: 90%;" title="12:45 PM (Lunch Rush)"></div>
+                        <div class="chart-bar" style="height: 45%;" title="1:30 PM (Lunch Taper)"></div>
+                        <div class="chart-bar" style="height: 75%;" title="8:15 PM (Dinner Rush)"></div>
                     </div>
                     <div class="chart-labels">
                         <span>8:00 AM</span>
@@ -78,60 +154,239 @@
                 </div>
             </section>
 
-            <!-- Card 3: Today's Menu -->
-            <section class="card">
-                <h2>Today's Menu</h2>
-                <div class="menu-section">
-                    <div class="meal-item">
-                        <div class="meal-item-header">
-                            <h3>Breakfast</h3>
-                            <span class="meal-time-tag">7:30 AM – 9:30 AM</span>
+            <!-- FEATURE 3: Interactive Today's Menu with Tabs, Nutrition & Allergen Tags -->
+            <section class="card" style="grid-column: 1 / -1;">
+                <div class="card-header-row">
+                    <h2>
+                        <span class="card-title-icon">🥗</span>
+                        <span>Today's Menu & Dietary Information</span>
+                    </h2>
+                    <span class="badge" style="background:#1e293b; color:#cbd5e1;">Chef Special Day</span>
+                </div>
+
+                <!-- Interactive Meal Slot Selector Tabs -->
+                <div class="meal-tab-bar">
+                    <button type="button" class="meal-tab-btn" onclick="switchMealTab('breakfast')">
+                        <span>🍳 Breakfast (7:30 - 9:30 AM)</span>
+                    </button>
+                    <button type="button" class="meal-tab-btn active" onclick="switchMealTab('lunch')">
+                        <span class="meal-active-indicator"></span>
+                        <span>🍛 Lunch • Serving Now (12:00 - 2:30 PM)</span>
+                    </button>
+                    <button type="button" class="meal-tab-btn" onclick="switchMealTab('snacks')">
+                        <span>☕ Evening Snacks (5:00 - 6:00 PM)</span>
+                    </button>
+                    <button type="button" class="meal-tab-btn" onclick="switchMealTab('dinner')">
+                        <span>🍲 Dinner (7:30 - 9:30 PM)</span>
+                    </button>
+                </div>
+
+                <div class="meal-panel-container">
+                    <!-- Tab 1: Breakfast Pane -->
+                    <div class="meal-slot-pane" id="pane-breakfast">
+                        <div class="dish-card-grid">
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Indori Poha</span>
+                                        <span class="diet-icon" title="Vegetarian">🌱</span>
+                                    </div>
+                                    <p class="dish-desc">Flattened rice tempered with mustard seeds, curry leaves, roasted peanuts & lemon.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 240 kcal</span>
+                                    <span class="chip chip-protein">💪 5g Protein</span>
+                                    <span class="chip chip-allergen">⚠️ Peanuts</span>
+                                </div>
+                            </div>
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Aloo Stuffed Paratha</span>
+                                        <span class="diet-icon" title="Vegetarian">🌱</span>
+                                    </div>
+                                    <p class="dish-desc">Crisp whole wheat flatbread stuffed with spiced mashed potatoes, served with fresh curd.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 320 kcal</span>
+                                    <span class="chip chip-protein">💪 8g Protein</span>
+                                    <span class="chip chip-allergen">⚠️ Gluten, Dairy</span>
+                                </div>
+                            </div>
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Masala Chai / Filter Coffee</span>
+                                        <span class="diet-icon" title="Beverage">☕</span>
+                                    </div>
+                                    <p class="dish-desc">Freshly brewed ginger-cardamom tea or south Indian style filter coffee.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 85 kcal</span>
+                                    <span class="chip chip-allergen">⚠️ Milk</span>
+                                </div>
+                            </div>
                         </div>
-                        <ul>
-                            <li>Poha</li>
-                            <li>Aloo Paratha</li>
-                            <li>Curd</li>
-                            <li>Tea / Coffee</li>
-                        </ul>
                     </div>
 
-                    <div class="meal-item">
-                        <div class="meal-item-header">
-                            <h3>Lunch</h3>
-                            <span class="meal-time-tag">12:00 PM – 2:30 PM</span>
+                    <!-- Tab 2: Lunch Pane (Active Default) -->
+                    <div class="meal-slot-pane active" id="pane-lunch">
+                        <div class="dish-card-grid">
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Paneer Butter Masala</span>
+                                        <span class="diet-icon" title="Vegetarian">🌱</span>
+                                    </div>
+                                    <p class="dish-desc">Fresh cottage cheese cubes simmered in a rich tomato, butter, and cashew gravy.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 340 kcal</span>
+                                    <span class="chip chip-protein">💪 16g Protein</span>
+                                    <span class="chip chip-allergen">⚠️ Dairy, Cashews</span>
+                                </div>
+                            </div>
+
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Yellow Dal Fry</span>
+                                        <span class="diet-icon" title="Vegetarian">🌱</span>
+                                    </div>
+                                    <p class="dish-desc">Yellow lentils tempered with ghee, cumin, garlic, onions, and green chilies.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 160 kcal</span>
+                                    <span class="chip chip-protein">💪 9g Protein</span>
+                                    <span class="chip chip-allergen">⚠️ Ghee (Dairy)</span>
+                                </div>
+                            </div>
+
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Jeera Rice & Tawa Roti</span>
+                                        <span class="diet-icon" title="Vegetarian">🌱</span>
+                                    </div>
+                                    <p class="dish-desc">Fragrant basmati rice tossed with roasted cumin seeds + freshly puffed whole-wheat rotis.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 280 kcal</span>
+                                    <span class="chip chip-protein">💪 6g Protein</span>
+                                    <span class="chip chip-allergen">⚠️ Wheat (Gluten)</span>
+                                </div>
+                            </div>
+
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Fresh Salad & Boondi Raita</span>
+                                        <span class="diet-icon" title="Vegetarian">🌱</span>
+                                    </div>
+                                    <p class="dish-desc">Sliced cucumber, carrots, tomatoes with chilled spiced yogurt boondi.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 90 kcal</span>
+                                    <span class="chip chip-protein">💪 4g Protein</span>
+                                    <span class="chip chip-allergen">⚠️ Dairy</span>
+                                </div>
+                            </div>
                         </div>
-                        <ul>
-                            <li>Dal Fry</li>
-                            <li>Paneer Butter Masala</li>
-                            <li>Jeera Rice</li>
-                            <li>Tawa Roti</li>
-                            <li>Salad</li>
-                        </ul>
                     </div>
 
-                    <div class="meal-item">
-                        <div class="meal-item-header">
-                            <h3>Dinner</h3>
-                            <span class="meal-time-tag">7:30 PM – 9:30 PM</span>
+                    <!-- Tab 3: Snacks Pane -->
+                    <div class="meal-slot-pane" id="pane-snacks">
+                        <div class="dish-card-grid">
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Vegetable Samosa</span>
+                                        <span class="diet-icon" title="Vegetarian">🌱</span>
+                                    </div>
+                                    <p class="dish-desc">Crispy golden pastry stuffed with spiced potatoes and green peas, served with mint chutney.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 210 kcal</span>
+                                    <span class="chip chip-protein">💪 4g Protein</span>
+                                    <span class="chip chip-allergen">⚠️ Gluten</span>
+                                </div>
+                            </div>
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Hot Adrak Chai</span>
+                                        <span class="diet-icon" title="Beverage">☕</span>
+                                    </div>
+                                    <p class="dish-desc">Evening ginger tea brewed fresh with milk and spices.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 75 kcal</span>
+                                    <span class="chip chip-allergen">⚠️ Milk</span>
+                                </div>
+                            </div>
                         </div>
-                        <ul>
-                            <li>Dal Tadka</li>
-                            <li>Mix Vegetable</li>
-                            <li>Steamed Rice</li>
-                            <li>Phulka Roti</li>
-                            <li>Gulab Jamun</li>
-                        </ul>
+                    </div>
+
+                    <!-- Tab 4: Dinner Pane -->
+                    <div class="meal-slot-pane" id="pane-dinner">
+                        <div class="dish-card-grid">
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Dal Tadka & Mix Vegetable</span>
+                                        <span class="diet-icon" title="Vegetarian">🌱</span>
+                                    </div>
+                                    <p class="dish-desc">Slow-cooked arhar dal with dry spicy seasonal mixed vegetables.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 280 kcal</span>
+                                    <span class="chip chip-protein">💪 11g Protein</span>
+                                </div>
+                            </div>
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Steamed Rice & Phulka Roti</span>
+                                        <span class="diet-icon" title="Vegetarian">🌱</span>
+                                    </div>
+                                    <p class="dish-desc">Light dinner staple served hot with ghee brushing.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 260 kcal</span>
+                                    <span class="chip chip-allergen">⚠️ Wheat</span>
+                                </div>
+                            </div>
+                            <div class="dish-card">
+                                <div>
+                                    <div class="dish-name-row">
+                                        <span class="dish-title">Gulab Jamun (2 pcs)</span>
+                                        <span class="diet-icon" title="Dessert">🍯</span>
+                                    </div>
+                                    <p class="dish-desc">Warm milk-solid dumplings soaked in rose and cardamom sugar syrup.</p>
+                                </div>
+                                <div class="nutrition-tags-row">
+                                    <span class="chip chip-cal">🔥 290 kcal</span>
+                                    <span class="chip chip-allergen">⚠️ Dairy, Gluten</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Card 4: Food Rating & Voting -->
+            <!-- Card 5: Food Quality Voting -->
             <section class="card">
-                <h2>Food Quality Voting</h2>
-                <p class="vote-description">Rate today's prepared items to help mess committee plan inventory:</p>
+                <div class="card-header-row">
+                    <h2>
+                        <span class="card-title-icon">🗳️</span>
+                        <span>Meal Quality Voting</span>
+                    </h2>
+                    <span style="font-size:0.75rem; color:var(--text-dim);">Live Feedback Meter</span>
+                </div>
+                <p class="vote-description">Rate today's prepared items to help the student mess committee:</p>
                 <div class="voting-section">
                     <div class="vote-item">
-                        <span>Lunch - Paneer Butter Masala</span>
+                        <span>Lunch: Paneer Butter Masala</span>
                         <div class="vote-buttons">
                             <button type="button" class="btn-vote btn-like" onclick="vote('paneer', 'like')">👍 Good</button>
                             <button type="button" class="btn-vote btn-dislike" onclick="vote('paneer', 'dislike')">👎 Needs Improvement</button>
@@ -140,7 +395,7 @@
                     </div>
 
                     <div class="vote-item">
-                        <span>Dinner - Mix Vegetable</span>
+                        <span>Dinner: Mix Vegetable & Gulab Jamun</span>
                         <div class="vote-buttons">
                             <button type="button" class="btn-vote btn-like" onclick="vote('vegetable', 'like')">👍 Good</button>
                             <button type="button" class="btn-vote btn-dislike" onclick="vote('vegetable', 'dislike')">👎 Needs Improvement</button>
@@ -150,26 +405,30 @@
                 </div>
             </section>
 
-            <!-- Card 5: Student Feedback Form -->
-            <section class="card" style="grid-column: 1 / -1;">
-                <h2>Student Mess Feedback</h2>
+            <!-- Card 6: Student Feedback Form -->
+            <section class="card">
+                <div class="card-header-row">
+                    <h2>
+                        <span class="card-title-icon">📝</span>
+                        <span>Student Feedback Form</span>
+                    </h2>
+                    <span style="font-size:0.75rem; color:var(--text-dim);">Direct to Mess Warden</span>
+                </div>
                 <form class="feedback-form" id="feedbackForm" onsubmit="submitFeedback(event)">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-                        <div class="form-group">
-                            <label for="feedbackName">Student Name / Roll Number:</label>
-                            <input type="text" id="feedbackName" name="name" placeholder="e.g. Akshit (2427030065)" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="feedbackMessage">Observations or Suggestions:</label>
-                            <textarea id="feedbackMessage" name="message" rows="3" placeholder="Share comments about food quality, queue timing, or cleanliness..." required></textarea>
-                        </div>
+                    <div class="form-group">
+                        <label for="feedbackName">Student Name / Roll Number:</label>
+                        <input type="text" id="feedbackName" name="name" placeholder="e.g. Akshit (2427030065)" required>
                     </div>
-                    <div style="display:flex; justify-content: flex-end; margin-top: 8px;">
-                        <button type="submit" class="btn btn-primary">Submit Student Feedback</button>
+                    <div class="form-group">
+                        <label for="feedbackMessage">Observations or Suggestions:</label>
+                        <textarea id="feedbackMessage" name="message" rows="3" placeholder="Share remarks on food warmth, queue flow, or hygiene..." required></textarea>
+                    </div>
+                    <div style="display:flex; justify-content: flex-end; margin-top: 4px;">
+                        <button type="submit" class="btn btn-primary">Submit Feedback</button>
                     </div>
                 </form>
                 <div id="feedbackSuccess" class="success-message" style="display: none; margin-top: 12px;">
-                    ✓ Thank you! Your feedback has been recorded and submitted to the mess administration.
+                    ✓ Thank you! Your feedback has been recorded for the mess warden.
                 </div>
             </section>
 
