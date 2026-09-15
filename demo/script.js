@@ -1,71 +1,132 @@
-// Voting data storage
-let votingData = {
-    paneer: { likes: 0, dislikes: 0 },
-    vegetable: { likes: 0, dislikes: 0 }
+/**
+ * Smart Mess Manager - Dashboard & Client Script
+ * ----------------------------------------------------
+ * Handles:
+ * 1. Student Dashboard crowd level sync with Live Crowd Monitor
+ * 2. Food rating & voting persistence in localStorage
+ * 3. Student feedback submission and admin sentiment categorization
+ * 4. Admin dashboard metrics, wastage, and recent feedback rendering
+ */
+
+// Global Storage Keys
+const STORAGE_KEYS = {
+    VOTING: 'smm_voting_data',
+    FEEDBACK: 'smm_feedback_data',
+    LIVE_CROWD: 'smm_live_crowd'
 };
 
-// Feedback storage
+// Default voting state
+let votingData = {
+    paneer: { likes: 142, dislikes: 18 },
+    vegetable: { likes: 98, dislikes: 31 }
+};
+
+// Feedback list
 let feedbackData = [];
 
-// Initialize page-specific functionality
-document.addEventListener('DOMContentLoaded', function() {
-    // Check which page we're on
+// ==========================================
+// 1. LIFECYCLE INITIALIZATION
+// ==========================================
+document.addEventListener('DOMContentLoaded', function () {
+    // Check page context
     if (document.querySelector('#crowdLevel')) {
         initStudentDashboard();
     }
     if (document.querySelector('#totalStudents')) {
         initAdminDashboard();
     }
+
+    // Listen to cross-tab updates from Live Crowd Monitor
+    window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEYS.LIVE_CROWD && document.querySelector('#crowdLevel')) {
+            syncLiveCrowdState();
+        }
+    });
 });
 
-// Student Dashboard Functions
+// ==========================================
+// 2. STUDENT DASHBOARD
+// ==========================================
 function initStudentDashboard() {
-    // Initialize crowd level
-    updateCrowdLevel();
-    
-    // Update crowd level every 10 seconds
-    setInterval(updateCrowdLevel, 10000);
-    
-    // Load voting data from localStorage
     loadVotingData();
-    
-    // Load feedback data from localStorage
     loadFeedbackData();
+
+    // Initial crowd check
+    syncLiveCrowdState();
+
+    // Check every 3 seconds for live camera updates
+    setInterval(syncLiveCrowdState, 3000);
 }
 
-function updateCrowdLevel() {
-    // Simulate crowd levels: Low (0-40%), Medium (40-70%), High (70-100%)
-    const levels = ['low', 'medium', 'high'];
-    const percentages = [25, 55, 85];
-    
-    // Randomly select a level (weighted towards medium)
-    const random = Math.random();
-    let level, percentage;
-    
-    if (random < 0.3) {
-        level = 'low';
-        percentage = Math.floor(Math.random() * 30) + 10; // 10-40%
-    } else if (random < 0.7) {
-        level = 'medium';
-        percentage = Math.floor(Math.random() * 30) + 40; // 40-70%
-    } else {
-        level = 'high';
-        percentage = Math.floor(Math.random() * 25) + 70; // 70-95%
-    }
-    
+/**
+ * Reads state from Live Crowd Monitor (if active) or applies realistic baseline
+ */
+function syncLiveCrowdState() {
     const indicator = document.getElementById('crowdIndicator');
     const fill = document.getElementById('crowdFill');
-    
-    if (indicator && fill) {
-        // Update indicator
-        indicator.textContent = level.charAt(0).toUpperCase() + level.slice(1);
-        indicator.className = 'crowd-indicator ' + level;
-        
-        // Update fill bar
+    const metaEl = document.getElementById('liveCrowdMeta');
+    const syncBadge = document.getElementById('liveSyncBadge');
+
+    if (!indicator || !fill) return;
+
+    let liveData = null;
+    try {
+        const raw = localStorage.getItem(STORAGE_KEYS.LIVE_CROWD);
+        if (raw) {
+            liveData = JSON.parse(raw);
+        }
+    } catch (e) {}
+
+    const now = Date.now();
+    const isLiveRecent = liveData && (now - liveData.updatedAt < 45000); // within last 45s
+
+    if (isLiveRecent) {
+        // Live camera / simulation stream is actively pushing updates!
+        const count = liveData.count;
+        const status = liveData.status; // 'LOW' | 'MODERATE' | 'HIGH'
+        const percentage = liveData.percentage;
+
+        indicator.textContent = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+        indicator.className = 'crowd-indicator ' + status.toLowerCase();
         fill.style.width = percentage + '%';
+
+        if (metaEl) {
+            metaEl.innerHTML = `<strong>Estimated People:</strong> ${count} students &nbsp;|&nbsp; <strong>Detection Confidence:</strong> ${liveData.confidence || 88}%`;
+        }
+
+        if (syncBadge) {
+            if (liveData.source === 'simulation') {
+                syncBadge.innerHTML = '⚡ <span>Simulation Stream Active</span>';
+                syncBadge.className = 'badge badge-warning';
+            } else {
+                syncBadge.innerHTML = '● <span>Live Camera Stream Connected</span>';
+                syncBadge.className = 'badge badge-live';
+            }
+        }
+    } else {
+        // Default realistic baseline when camera is idle
+        if (!indicator.dataset.initialized) {
+            indicator.textContent = 'Moderate';
+            indicator.className = 'crowd-indicator moderate';
+            fill.style.width = '48%';
+            indicator.dataset.initialized = 'true';
+
+            if (metaEl) {
+                metaEl.innerHTML = `<strong>Estimated People:</strong> ~12 students (Typical for this hour)`;
+            }
+            if (syncBadge) {
+                syncBadge.innerHTML = '<span>Camera Idle • Connect Live Monitor</span>';
+                syncBadge.className = 'badge';
+                syncBadge.style.background = '#1e293b';
+                syncBadge.style.color = '#94a3b8';
+            }
+        }
     }
 }
 
+// ==========================================
+// 3. FOOD VOTING SYSTEM
+// ==========================================
 function vote(item, type) {
     if (votingData[item]) {
         if (type === 'like') {
@@ -73,7 +134,6 @@ function vote(item, type) {
         } else {
             votingData[item].dislikes++;
         }
-        
         updateVoteDisplay(item);
         saveVotingData();
     }
@@ -82,43 +142,54 @@ function vote(item, type) {
 function updateVoteDisplay(item) {
     const voteCount = document.getElementById('vote-' + item);
     if (voteCount && votingData[item]) {
-        voteCount.textContent = `${votingData[item].likes} likes, ${votingData[item].dislikes} dislikes`;
+        const likes = votingData[item].likes;
+        const dislikes = votingData[item].dislikes;
+        const total = likes + dislikes;
+        const approval = total > 0 ? Math.round((likes / total) * 100) : 0;
+        voteCount.textContent = `${likes} likes, ${dislikes} dislikes (${approval}% approval)`;
     }
 }
 
 function loadVotingData() {
-    const saved = localStorage.getItem('votingData');
+    const saved = localStorage.getItem(STORAGE_KEYS.VOTING);
     if (saved) {
-        votingData = JSON.parse(saved);
-        // Update displays
-        Object.keys(votingData).forEach(item => {
-            updateVoteDisplay(item);
-        });
+        try {
+            votingData = JSON.parse(saved);
+        } catch (e) {}
     }
+    Object.keys(votingData).forEach(item => {
+        updateVoteDisplay(item);
+    });
 }
 
 function saveVotingData() {
-    localStorage.setItem('votingData', JSON.stringify(votingData));
+    localStorage.setItem(STORAGE_KEYS.VOTING, JSON.stringify(votingData));
 }
 
+// ==========================================
+// 4. STUDENT FEEDBACK SYSTEM
+// ==========================================
 function submitFeedback(event) {
     event.preventDefault();
-    
-    const name = document.getElementById('feedbackName').value;
-    const message = document.getElementById('feedbackMessage').value;
-    
+
+    const nameInput = document.getElementById('feedbackName');
+    const messageInput = document.getElementById('feedbackMessage');
+
+    if (!nameInput || !messageInput) return;
+
+    const name = nameInput.value.trim();
+    const message = messageInput.value.trim();
+
     if (name && message) {
-        // Add to feedback data
         const feedback = {
             name: name,
             message: message,
             timestamp: new Date().toISOString()
         };
-        
+
         feedbackData.push(feedback);
         saveFeedbackData();
-        
-        // Show success message
+
         const successMsg = document.getElementById('feedbackSuccess');
         if (successMsg) {
             successMsg.style.display = 'block';
@@ -126,49 +197,50 @@ function submitFeedback(event) {
                 successMsg.style.display = 'none';
             }, 3000);
         }
-        
-        // Reset form
+
         document.getElementById('feedbackForm').reset();
     }
 }
 
 function loadFeedbackData() {
-    const saved = localStorage.getItem('feedbackData');
+    const saved = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
     if (saved) {
-        feedbackData = JSON.parse(saved);
+        try {
+            feedbackData = JSON.parse(saved);
+        } catch (e) {}
     }
 }
 
 function saveFeedbackData() {
-    localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
+    localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(feedbackData));
 }
 
-// Admin Dashboard Functions
+// ==========================================
+// 5. ADMIN DASHBOARD
+// ==========================================
 function initAdminDashboard() {
     // Animate total students counter
-    animateCounter('totalStudents', 0, 247, 2000);
-    
-    // Update wastage percentage
+    animateCounter('totalStudents', 0, 312, 1200);
+
+    // Initial load
     updateWastage();
-    
-    // Load and display feedback
     loadAdminFeedback();
-    
-    // Update stats periodically
+
+    // Check periodically
     setInterval(() => {
         updateWastage();
         loadAdminFeedback();
-    }, 15000);
+    }, 12000);
 }
 
 function animateCounter(elementId, start, end, duration) {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     const range = end - start;
-    const increment = range / (duration / 16); // 60fps
+    const increment = range / (duration / 20);
     let current = start;
-    
+
     const timer = setInterval(() => {
         current += increment;
         if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
@@ -176,89 +248,87 @@ function animateCounter(elementId, start, end, duration) {
             clearInterval(timer);
         }
         element.textContent = Math.floor(current);
-    }, 16);
+    }, 20);
 }
 
 function updateWastage() {
-    // Simulate wastage percentage (10-20%)
-    const wastage = Math.floor(Math.random() * 11) + 10; // 10-20%
+    // Realistic cafeteria wastage rate (11% - 15%)
+    const wastage = 12;
     const percentElement = document.getElementById('wastagePercent');
     const fillElement = document.querySelector('.wastage-fill');
-    
+
     if (percentElement) {
         percentElement.textContent = wastage + '%';
     }
-    
     if (fillElement) {
         fillElement.style.width = wastage + '%';
     }
 }
 
 function loadAdminFeedback() {
-    // Load feedback from localStorage
-    const saved = localStorage.getItem('feedbackData');
+    const saved = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
     let allFeedback = [];
-    
+
     if (saved) {
-        allFeedback = JSON.parse(saved);
+        try {
+            allFeedback = JSON.parse(saved);
+        } catch (e) {}
     }
-    
-    // Update feedback stats
+
+    // Default sample feedbacks if empty
+    if (allFeedback.length === 0) {
+        allFeedback = [
+            { name: "Rahul S.", message: "Lunch was very fresh today. Paneer butter masala was good.", timestamp: new Date(Date.now() - 3600000).toISOString() },
+            { name: "Ananya K.", message: "Queue was moving quickly around 1:15 PM.", timestamp: new Date(Date.now() - 7200000).toISOString() }
+        ];
+    }
+
     const totalFeedback = document.getElementById('totalFeedback');
     const positiveFeedback = document.getElementById('positiveFeedback');
     const negativeFeedback = document.getElementById('negativeFeedback');
-    
+
     if (totalFeedback) {
-        animateCounter('totalFeedback', parseInt(totalFeedback.textContent) || 0, allFeedback.length, 500);
+        totalFeedback.textContent = allFeedback.length;
     }
-    
-    // Simple sentiment analysis (check for positive/negative keywords)
+
     let positive = 0;
     let negative = 0;
-    
-    allFeedback.forEach(feedback => {
-        const message = feedback.message.toLowerCase();
-        const positiveWords = ['good', 'great', 'excellent', 'nice', 'love', 'amazing', 'delicious', 'tasty', 'wonderful'];
-        const negativeWords = ['bad', 'poor', 'terrible', 'awful', 'disgusting', 'worst', 'hate', 'disappointed'];
-        
-        const hasPositive = positiveWords.some(word => message.includes(word));
-        const hasNegative = negativeWords.some(word => message.includes(word));
-        
-        if (hasPositive && !hasNegative) {
-            positive++;
-        } else if (hasNegative) {
-            negative++;
-        }
+
+    const posWords = ['good', 'great', 'excellent', 'nice', 'fresh', 'delicious', 'tasty', 'quick', 'love'];
+    const negWords = ['bad', 'poor', 'slow', 'cold', 'disappointing', 'worst', 'crowded', 'salt'];
+
+    allFeedback.forEach(f => {
+        const msg = f.message.toLowerCase();
+        const isPos = posWords.some(w => msg.includes(w));
+        const isNeg = negWords.some(w => msg.includes(w));
+        if (isPos && !isNeg) positive++;
+        else if (isNeg) negative++;
+        else positive++;
     });
-    
-    if (positiveFeedback) {
-        positiveFeedback.textContent = positive;
-    }
-    if (negativeFeedback) {
-        negativeFeedback.textContent = negative;
-    }
-    
-    // Display recent feedback
-    displayRecentFeedback(allFeedback.slice(-5).reverse()); // Last 5, most recent first
+
+    if (positiveFeedback) positiveFeedback.textContent = positive;
+    if (negativeFeedback) negativeFeedback.textContent = negative;
+
+    displayRecentFeedback(allFeedback.slice(-5).reverse());
 }
 
 function displayRecentFeedback(feedbacks) {
-    const feedbackList = document.getElementById('feedbackList');
-    if (!feedbackList) return;
-    
+    const list = document.getElementById('feedbackList');
+    if (!list) return;
+
     if (feedbacks.length === 0) {
-        feedbackList.innerHTML = '<p class="no-feedback">No feedback submitted yet.</p>';
+        list.innerHTML = '<p class="no-feedback">No feedback submitted yet.</p>';
         return;
     }
-    
-    feedbackList.innerHTML = feedbacks.map(feedback => {
-        const date = new Date(feedback.timestamp);
-        const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    list.innerHTML = feedbacks.map(item => {
+        const d = new Date(item.timestamp);
+        const timeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         return `
             <div class="feedback-item">
-                <strong>${feedback.name}</strong>
-                <p>${feedback.message}</p>
-                <small style="color: #888; font-size: 0.85rem;">${dateStr}</small>
+                <strong>${item.name}</strong>
+                <p>${item.message}</p>
+                <small style="color: #64748b; font-size: 0.75rem;">${timeStr}</small>
             </div>
         `;
     }).join('');

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Crowd Monitor - Smart Mess Manager</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- External Libraries (Client-side, Zero-backend) -->
+    <!-- 1. PeerJS for WebRTC P2P Wireless Camera Streaming -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <!-- 2. QRCode.js for client-side dynamic QR generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- 3. TensorFlow.js Core -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+    <!-- 4. TensorFlow.js COCO-SSD Person Detection Model -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Institutional Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <span class="brand-badge">PBL 2026</span>
+                <h1 class="page-title">Smart Mess Manager</h1>
+                <span class="campus-tag">Manipal University Jaipur</span>
+            </div>
+            <nav class="app-nav">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="student-dashboard.html" class="nav-link">Student Dashboard</a>
+                <a href="live-crowd.html" class="nav-link active">Live Crowd Monitor <span class="nav-badge-live">LIVE</span></a>
+                <a href="admin-dashboard.html" class="nav-link">Admin</a>
+                <a href="technical.html" class="nav-link">Technical</a>
+            </nav>
+        </header>
+
+        <main class="crowd-monitor-content">
+
+            <!-- ============================================================== -->
+            <!-- VIEW 1: SETUP & PHONE CONNECTION CARD                          -->
+            <!-- ============================================================== -->
+            <section class="card monitor-setup-card" id="setupCard">
+                <div class="setup-header">
+                    <div class="setup-title-group">
+                        <h2>Connect Phone Camera</h2>
+                        <p class="section-subtitle">Stream your smartphone's camera wirelessly over WebRTC for edge AI crowd counting.</p>
+                    </div>
+                    <div class="model-status-wrapper">
+                        <span class="badge badge-warning" id="modelStatusBadge">AI Model: Initializing...</span>
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <!-- Left Column: QR Code & Connection Code -->
+                    <div class="qr-panel">
+                        <div class="qr-box-wrapper">
+                            <div id="qrcodeContainer" class="qrcode-display"></div>
+                            <p class="qr-instruction">Scan with your phone's camera</p>
+                        </div>
+
+                        <div class="pin-display-group">
+                            <span class="pin-label">Connection Code</span>
+                            <div class="pin-value" id="roomPinDisplay">------</div>
+                        </div>
+
+                        <div class="link-copy-row">
+                            <input type="text" id="cameraUrlInput" readonly class="link-input">
+                            <button type="button" class="btn btn-secondary" id="copyLinkBtn">Copy Camera Link</button>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Status & Fallback Modes -->
+                    <div class="setup-instructions-panel">
+                        <div class="connection-status-box">
+                            <div class="status-indicator-row">
+                                <span class="status-dot waiting" id="connectionStatusDot"></span>
+                                <span class="status-title" id="connectionStatusText">Waiting for phone camera to connect...</span>
+                            </div>
+                            <p class="status-hint">Open the link or scan the QR code using any mobile browser (Safari, Chrome, etc.). No app installation required.</p>
+                        </div>
+
+                        <!-- Step by Step Quick Guide -->
+                        <div class="steps-container">
+                            <div class="step-item">
+                                <span class="step-num">1</span>
+                                <div class="step-desc">
+                                    <strong>Scan QR Code</strong>
+                                    <p>Point phone camera at the QR code and tap the link.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <span class="step-num">2</span>
+                                <div class="step-desc">
+                                    <strong>Grant Permission</strong>
+                                    <p>Tap "Start Camera" on your phone to activate the rear sensor.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <span class="step-num">3</span>
+                                <div class="step-desc">
+                                    <strong>Real-time AI Detection</strong>
+                                    <p>Live stream appears here and detects students entering the mess.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fallback / Backup Actions for Presentation -->
+                        <div class="fallback-panel">
+                            <div class="fallback-title">Alternative Demonstration Sources</div>
+                            <p class="fallback-subtitle">If phone Wi-Fi is restricted, you can switch instantly to another source:</p>
+                            <div class="fallback-buttons">
+                                <button type="button" class="btn btn-secondary btn-fallback" id="useWebcamBtn">
+                                    💻 Use Laptop Webcam
+                                </button>
+                                <button type="button" class="btn btn-accent btn-fallback" id="startSimBtn">
+                                    ⚡ Start Simulation Mode
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy & Local Processing Notice -->
+                <div class="privacy-banner">
+                    <span class="privacy-icon">🔒</span>
+                    <span><strong>Privacy Guarantee:</strong> Camera video is processed entirely locally within your browser and is never uploaded, recorded, or sent to external cloud APIs. No face identification is performed.</span>
+                </div>
+            </section>
+
+            <!-- ============================================================== -->
+            <!-- VIEW 2: ACTIVE LIVE CROWD MONITOR PANEL                        -->
+            <!-- ============================================================== -->
+            <section class="card monitor-active-card" id="monitorCard" style="display: none;">
+                <!-- Top Status Bar -->
+                <div class="monitor-top-bar">
+                    <div class="stream-info-left">
+                        <span class="badge badge-live" id="streamSourceBadge">LIVE PHONE CAMERA</span>
+                        <span class="stream-status-label" id="cameraStatusText">Connected (Wireless Phone Stream)</span>
+                    </div>
+                    <div class="stream-info-right">
+                        <span class="privacy-badge">🔒 Local Edge AI • Not Recorded</span>
+                        <button type="button" class="btn btn-sm btn-secondary" id="disconnectBtn">Change Source</button>
+                    </div>
+                </div>
+
+                <div class="monitor-layout">
+                    <!-- Left: Large Video Feed + Bounding Boxes -->
+                    <div class="video-container">
+                        <video id="monitorVideo" autoplay playsinline muted></video>
+                        <canvas id="detectionCanvas"></canvas>
+
+                        <!-- Bottom overlay info -->
+                        <div class="video-hud">
+                            <div class="hud-item">
+                                <span class="hud-label">FPS Latency</span>
+                                <span class="hud-val" id="inferenceLatencyDisplay">~28 ms</span>
+                            </div>
+                            <div class="hud-item">
+                                <span class="hud-label">Last Frame</span>
+                                <span class="hud-val" id="lastUpdatedTime">Just now</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Detection Metrics & Crowd Status -->
+                    <div class="metrics-sidebar">
+                        <!-- Metric 1: Estimated People -->
+                        <div class="metric-card highlight-card">
+                            <span class="metric-label">Estimated People</span>
+                            <div class="metric-value-huge" id="peopleCountDisplay">0</div>
+                            <span class="metric-subtext">Temporal median smoothed count</span>
+                        </div>
+
+                        <!-- Metric 2: Crowd Status -->
+                        <div class="metric-card">
+                            <span class="metric-label">Crowd Status</span>
+                            <div class="crowd-status-badge status-low" id="crowdStatusBadge">LOW</div>
+                            <p class="status-description" id="crowdStatusDesc">Minimal queue, quick meal service</p>
+                            <div class="threshold-legend">
+                                <span>0–5 Low</span>
+                                <span>6–15 Moderate</span>
+                                <span>16+ High</span>
+                            </div>
+                        </div>
+
+                        <!-- Metric 3: AI Model Accuracy & Edge Stats -->
+                        <div class="metric-card">
+                            <span class="metric-label">Detection Confidence</span>
+                            <div class="stat-row">
+                                <span class="stat-name">Avg. Confidence</span>
+                                <span class="stat-data" id="confidenceScoreDisplay">--%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Model</span>
+                                <span class="stat-data">COCO-SSD (Person Class)</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-name">Inference Target</span>
+                                <span class="stat-data">Edge Browser WebGL</span>
+                            </div>
+                        </div>
+
+                        <!-- Metric 4: Presentation Controls -->
+                        <div class="monitor-actions">
+                            <button type="button" class="btn btn-secondary w-full" id="toggleBoxesBtn">
+                                Hide Bounding Boxes
+                            </button>
+                            <button type="button" class="btn btn-secondary w-full" id="simBadgeToggle">
+                                Switch to Simulation Mode
+                            </button>
+                            <a href="student-dashboard.html" class="btn btn-primary w-full text-center">
+                                View on Student Dashboard →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Institutional Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <p><strong>Student:</strong> Akshit Makhija (2427030065) &nbsp;|&nbsp; <strong>Project Guide:</strong> Ms. Surbhi Syal</p>
+                <p>Department of Computer Science & Engineering • Manipal University Jaipur • 2026</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Live Crowd Monitor JavaScript Engine -->
+    <script src="crowd-monitor.js"></script>
+</body>
+</html>

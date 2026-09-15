@@ -3,41 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Mess Manager - Home</title>
+    <title>Smart Mess Manager - Campus Dining Portal</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .portal-hero {
+            text-align: center;
+            padding: 32px 16px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .portal-hero h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+        .portal-hero p {
+            font-size: 1.05rem;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .portal-card {
+            background: #111827;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: border-color 0.2s, transform 0.15s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .portal-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        .portal-card.highlight {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: #0d1527;
+        }
+        .portal-card-top {
+            margin-bottom: 18px;
+        }
+        .portal-icon-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .portal-icon {
+            font-size: 1.8rem;
+        }
+        .portal-card h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+        .portal-card p {
+            font-size: 0.86rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+        .portal-card-btn {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #38bdf8;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1 class="main-title">Smart Mess Manager</h1>
-            <p class="subtitle">AI-Assisted Mess Monitoring & Student Interaction System</p>
+        <!-- Top Institutional Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <span class="brand-badge">PBL 2026</span>
+                <h1 class="page-title">Smart Mess Manager</h1>
+                <span class="campus-tag">Manipal University Jaipur</span>
+            </div>
+            <nav class="app-nav">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="student-dashboard.html" class="nav-link">Student Dashboard</a>
+                <a href="live-crowd.html" class="nav-link">Live Crowd Monitor <span class="nav-badge-live">LIVE</span></a>
+                <a href="admin-dashboard.html" class="nav-link">Admin</a>
+                <a href="technical.html" class="nav-link">Technical</a>
+            </nav>
         </header>
 
-        <main class="home-content">
-            <div class="intro-section">
-                <p class="intro-text">
-                    Smart Mess Manager is an intelligent system designed to enhance the dining experience 
-                    at university mess facilities. By leveraging AI-powered crowd estimation and predictive 
-                    analytics, the system helps students make informed decisions about meal timing while 
-                    providing administrators with valuable insights for better resource management.
+        <main>
+            <div class="portal-hero">
+                <h2>Campus Dining Intelligence & Crowd Monitoring</h2>
+                <p>
+                    An integrated smart dining portal designed for Manipal University Jaipur mess facilities. 
+                    Combines edge computer vision crowd estimation, predictive rush-hour trends, digital menus, 
+                    and student feedback within a privacy-preserving web architecture.
                 </p>
             </div>
 
-            <div class="dashboard-buttons">
-                <a href="student-dashboard.html" class="btn btn-primary">Student Dashboard</a>
-                <a href="admin-dashboard.html" class="btn btn-secondary">Admin Dashboard</a>
-            </div>
+            <div class="portal-grid">
+                <!-- 1. Live Crowd Monitor -->
+                <a href="live-crowd.html" class="portal-card highlight">
+                    <div class="portal-card-top">
+                        <div class="portal-icon-row">
+                            <span class="portal-icon">🎥</span>
+                            <span class="badge badge-live">LIVE FEATURE</span>
+                        </div>
+                        <h3>Live Crowd Monitor</h3>
+                        <p>
+                            Wirelessly connect your smartphone camera using a QR code. Live video stream runs client-side TensorFlow.js person detection and temporal median count smoothing.
+                        </p>
+                    </div>
+                    <span class="portal-card-btn">Launch Live Monitor →</span>
+                </a>
 
-            <div class="nav-links">
-                <a href="technical.html" class="link-text">Learn about the Technical Implementation →</a>
+                <!-- 2. Student Dashboard -->
+                <a href="student-dashboard.html" class="portal-card">
+                    <div class="portal-card-top">
+                        <div class="portal-icon-row">
+                            <span class="portal-icon">🍽️</span>
+                        </div>
+                        <h3>Student Dashboard</h3>
+                        <p>
+                            Check live mess crowd status, view predicted lunch/dinner rush times, check today's scheduled meals, vote on daily items, and submit suggestions.
+                        </p>
+                    </div>
+                    <span class="portal-card-btn">Open Student Portal →</span>
+                </a>
+
+                <!-- 3. Admin Console -->
+                <a href="admin-dashboard.html" class="portal-card">
+                    <div class="portal-card-top">
+                        <div class="portal-icon-row">
+                            <span class="portal-icon">📊</span>
+                        </div>
+                        <h3>Admin Dashboard</h3>
+                        <p>
+                            Real-time footfall monitoring, hourly peak hour distributions, daily food wastage audit tracker, and student feedback sentiment analytics.
+                        </p>
+                    </div>
+                    <span class="portal-card-btn">Open Admin Console →</span>
+                </a>
+
+                <!-- 4. Technical Architecture -->
+                <a href="technical.html" class="portal-card">
+                    <div class="portal-card-top">
+                        <div class="portal-icon-row">
+                            <span class="portal-icon">⚙️</span>
+                        </div>
+                        <h3>Technical Implementation</h3>
+                        <p>
+                            Comprehensive architecture documentation covering WebRTC peer-to-peer streaming, TensorFlow.js COCO-SSD edge pipeline, and privacy safeguards.
+                        </p>
+                    </div>
+                    <span class="portal-card-btn">Read System Specs →</span>
+                </a>
             </div>
         </main>
 
-        <footer>
+        <!-- Institutional Footer -->
+        <footer class="app-footer">
             <div class="footer-content">
-                <p><strong>Student:</strong> Akshit Makhija (2427030065)</p>
-                <p><strong>Guide:</strong> Ms. Surbhi Syal</p>
-                <p><strong>University:</strong> Manipal University Jaipur</p>
+                <p><strong>Student:</strong> Akshit Makhija (2427030065) &nbsp;|&nbsp; <strong>Project Guide:</strong> Ms. Surbhi Syal</p>
+                <p>Department of Computer Science & Engineering • Manipal University Jaipur • 2026</p>
             </div>
         </footer>
     </div>

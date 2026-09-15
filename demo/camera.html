@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Phone Camera Streamer - Smart Mess Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- PeerJS for WebRTC P2P Signaling -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <style>
+        /* Mobile-focused streamer styles */
+        body {
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .camera-page-container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .camera-header {
+            text-align: center;
+            padding: 8px 0 16px;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 16px;
+        }
+
+        .camera-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #38bdf8;
+            margin: 0 0 4px;
+            letter-spacing: -0.01em;
+        }
+
+        .camera-header p {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin: 0;
+        }
+
+        .session-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .session-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .session-id {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+
+        .video-box {
+            position: relative;
+            background: #000000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #1e293b;
+            aspect-ratio: 4 / 3;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        #cameraPreview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            padding: 24px;
+            color: #64748b;
+        }
+
+        .preview-placeholder svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 8px;
+            opacity: 0.6;
+        }
+
+        .stream-overlay-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(4px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e;
+            animation: livePulse 1.4s infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .stream-timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: ui-monospace, monospace;
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            display: none;
+        }
+
+        .controls-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .btn-mobile {
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-mobile-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+        .btn-mobile-primary:active {
+            background: #1d4ed8;
+        }
+
+        .btn-mobile-danger {
+            background: #dc2626;
+            color: #ffffff;
+            display: none;
+        }
+        .btn-mobile-danger:active {
+            background: #b91c1c;
+        }
+
+        .btn-mobile-secondary {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            font-size: 0.9rem;
+            padding: 10px 16px;
+            display: none;
+        }
+        .btn-mobile-secondary:active {
+            background: #334155;
+        }
+
+        .status-banner {
+            background: #111827;
+            border-left: 3px solid #38bdf8;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        .status-banner.error {
+            border-left-color: #ef4444;
+            color: #fca5a5;
+            background: #1e1b1b;
+        }
+
+        .status-banner.success {
+            border-left-color: #22c55e;
+            color: #86efac;
+            background: #132418;
+        }
+
+        .manual-room-entry {
+            display: none;
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        .manual-room-entry label {
+            display: block;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .room-input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .room-input-row input {
+            flex: 1;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #ffffff;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        .room-input-row button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .privacy-footer {
+            margin-top: auto;
+            padding-top: 16px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .privacy-footer svg {
+            vertical-align: -2px;
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="camera-page-container">
+        <header class="camera-header">
+            <h1>Smart Mess Manager</h1>
+            <p>Wireless Camera Node • PBL 2026</p>
+        </header>
+
+        <!-- Session Status Info -->
+        <div class="session-card" id="sessionCard">
+            <div>
+                <div class="session-label">Connected Session</div>
+                <div class="session-id" id="displayRoomId">Connecting...</div>
+            </div>
+            <button id="changeSessionBtn" style="background:none; border:none; color:#64748b; font-size:0.75rem; text-decoration:underline; cursor:pointer;">Change</button>
+        </div>
+
+        <!-- Manual PIN Entry (shown if no room in URL or on Change) -->
+        <div class="manual-room-entry" id="manualEntryBox">
+            <label for="manualPinInput">Enter 6-Digit Laptop Connection Code:</label>
+            <div class="room-input-row">
+                <input type="text" id="manualPinInput" placeholder="e.g. 483921" maxlength="12">
+                <button type="button" id="applyPinBtn">Connect</button>
+            </div>
+        </div>
+
+        <!-- Live Camera Preview Box -->
+        <div class="video-box" id="videoBox">
+            <video id="cameraPreview" autoplay playsinline muted></video>
+            <div class="preview-placeholder" id="previewPlaceholder">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                <p style="margin:0; font-size:0.9rem;">Camera is currently stopped</p>
+                <p style="margin:4px 0 0; font-size:0.75rem; color:#475569;">Tap "Start Camera" to begin streaming to your laptop</p>
+            </div>
+            <div class="stream-overlay-badge" id="streamLiveBadge">
+                <span class="pulse-dot"></span>
+                <span>STREAMING LIVE</span>
+            </div>
+            <div class="stream-timer" id="streamTimer">00:00</div>
+        </div>
+
+        <!-- Status Message Banner -->
+        <div class="status-banner" id="statusBanner">
+            Ready to connect. Tap <strong>Start Camera</strong> to share live cafeteria feed with your laptop.
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="controls-group">
+            <button type="button" class="btn-mobile btn-mobile-primary" id="startBtn">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Start Camera
+            </button>
+            <button type="button" class="btn-mobile btn-mobile-danger" id="stopBtn">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+                </svg>
+                Stop Camera
+            </button>
+            <button type="button" class="btn-mobile btn-mobile-secondary" id="flipBtn">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Switch Camera (Rear / Front)
+            </button>
+        </div>
+
+        <footer class="privacy-footer">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+            Camera stream is transmitted directly to your laptop via local WebRTC and is never recorded or saved.
+        </footer>
+    </div>
+
+    <script>
+        // Phone Camera Streamer Logic
+        const ROOM_PREFIX = 'smm-';
+        let targetPeerId = '';
+        let peer = null;
+        let localStream = null;
+        let activeCall = null;
+        let currentFacingMode = 'environment'; // Rear camera default
+        let timerInterval = null;
+        let elapsedSeconds = 0;
+        let wakeLock = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initParams();
+            setupHandlers();
+            initPeer();
+        });
+
+        function initParams() {
+            const params = new URLSearchParams(window.location.search);
+            let roomParam = params.get('room');
+
+            if (roomParam) {
+                if (!roomParam.startsWith(ROOM_PREFIX)) {
+                    targetPeerId = ROOM_PREFIX + roomParam;
+                } else {
+                    targetPeerId = roomParam;
+                }
+                const displayId = targetPeerId.replace(ROOM_PREFIX, '');
+                document.getElementById('displayRoomId').textContent = `#${displayId}`;
+                document.getElementById('manualEntryBox').style.display = 'none';
+            } else {
+                document.getElementById('displayRoomId').textContent = 'Not configured';
+                document.getElementById('manualEntryBox').style.display = 'block';
+            }
+        }
+
+        function setupHandlers() {
+            document.getElementById('startBtn').addEventListener('click', startCameraStreaming);
+            document.getElementById('stopBtn').addEventListener('click', stopCameraStreaming);
+            document.getElementById('flipBtn').addEventListener('click', toggleCameraFacing);
+
+            document.getElementById('changeSessionBtn').addEventListener('click', () => {
+                const box = document.getElementById('manualEntryBox');
+                box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            });
+
+            document.getElementById('applyPinBtn').addEventListener('click', () => {
+                const val = document.getElementById('manualPinInput').value.trim();
+                if (val) {
+                    targetPeerId = val.startsWith(ROOM_PREFIX) ? val : ROOM_PREFIX + val;
+                    document.getElementById('displayRoomId').textContent = `#${targetPeerId.replace(ROOM_PREFIX, '')}`;
+                    document.getElementById('manualEntryBox').style.display = 'none';
+                    showStatus('Session code updated to #' + targetPeerId.replace(ROOM_PREFIX, ''), 'success');
+                }
+            });
+        }
+
+        function initPeer() {
+            try {
+                // Generate a random phone peer ID
+                const phonePeerId = 'phone-' + Math.random().toString(36).substring(2, 9);
+                peer = new Peer(phonePeerId, {
+                    debug: 1,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ]
+                    }
+                });
+
+                peer.on('open', (id) => {
+                    console.log('[Phone Peer] Initialized with ID:', id);
+                });
+
+                peer.on('error', (err) => {
+                    console.warn('[Phone Peer] Error:', err);
+                    if (err.type === 'peer-unavailable') {
+                        showStatus('Laptop session #' + targetPeerId.replace(ROOM_PREFIX, '') + ' is not open yet. Make sure Live Crowd Monitor is open on your laptop.', 'error');
+                    }
+                });
+            } catch (e) {
+                console.error('Peer init failed', e);
+            }
+        }
+
+        async function startCameraStreaming() {
+            if (!targetPeerId) {
+                showStatus('Please enter your 6-digit laptop connection code first.', 'error');
+                document.getElementById('manualEntryBox').style.display = 'block';
+                return;
+            }
+
+            showStatus('Requesting camera access...');
+
+            // Request camera permissions with rear camera preference
+            const constraints = {
+                audio: false,
+                video: {
+                    facingMode: { ideal: currentFacingMode },
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    frameRate: { ideal: 24, max: 30 }
+                }
+            };
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Show local preview
+                const video = document.getElementById('cameraPreview');
+                video.srcObject = localStream;
+                video.style.display = 'block';
+                document.getElementById('previewPlaceholder').style.display = 'none';
+                document.getElementById('streamLiveBadge').style.display = 'flex';
+                document.getElementById('streamTimer').style.display = 'block';
+
+                // Toggle buttons
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('stopBtn').style.display = 'flex';
+                document.getElementById('flipBtn').style.display = 'flex';
+
+                // Call laptop peer
+                connectStreamToLaptop();
+
+                // Keep phone screen awake
+                requestWakeLock();
+
+                // Start timer
+                startTimer();
+
+                showStatus('Camera connected! Streaming live video to laptop.', 'success');
+
+            } catch (err) {
+                console.error('Camera error:', err);
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    showStatus('Camera permission was denied. Please allow camera access in your phone browser settings and try again.', 'error');
+                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                    showStatus('No camera device found on this phone.', 'error');
+                } else {
+                    showStatus('Could not access camera (' + err.name + '). Please ensure HTTPS is used and try again.', 'error');
+                }
+            }
+        }
+
+        function connectStreamToLaptop() {
+            if (!peer || !localStream || !targetPeerId) return;
+
+            console.log('[Phone Peer] Calling laptop:', targetPeerId);
+            activeCall = peer.call(targetPeerId, localStream);
+
+            activeCall.on('close', () => {
+                showStatus('Laptop disconnected the stream.', 'error');
+            });
+
+            activeCall.on('error', (err) => {
+                console.error('Call error:', err);
+                showStatus('Stream error. Reconnecting...', 'error');
+            });
+        }
+
+        function stopCameraStreaming() {
+            // Stop media stream tracks
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                localStream = null;
+            }
+
+            // Close call
+            if (activeCall) {
+                activeCall.close();
+                activeCall = null;
+            }
+
+            // Release wake lock
+            if (wakeLock) {
+                wakeLock.release().catch(() => {});
+                wakeLock = null;
+            }
+
+            // Stop timer
+            stopTimer();
+
+            // Reset UI
+            const video = document.getElementById('cameraPreview');
+            video.srcObject = null;
+            video.style.display = 'none';
+            document.getElementById('previewPlaceholder').style.display = 'block';
+            document.getElementById('streamLiveBadge').style.display = 'none';
+            document.getElementById('streamTimer').style.display = 'none';
+
+            document.getElementById('startBtn').style.display = 'flex';
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('flipBtn').style.display = 'none';
+
+            showStatus('Camera stopped. Ready to restart when needed.');
+        }
+
+        async function toggleCameraFacing() {
+            currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+            if (localStream) {
+                stopCameraStreaming();
+                setTimeout(startCameraStreaming, 300);
+            }
+        }
+
+        function startTimer() {
+            elapsedSeconds = 0;
+            const timerEl = document.getElementById('streamTimer');
+            timerEl.textContent = '00:00';
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                elapsedSeconds++;
+                const mins = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+                const secs = (elapsedSeconds % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Screen wake lock active');
+                }
+            } catch (err) {
+                console.warn('Wake Lock error:', err);
+            }
+        }
+
+        function showStatus(text, type = 'info') {
+            const banner = document.getElementById('statusBanner');
+            banner.textContent = text;
+            banner.className = `status-banner ${type}`;
+        }
+    </script>
+</body>
+</html>

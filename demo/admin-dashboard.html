@@ -8,11 +8,18 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1 class="page-title">Admin Dashboard</h1>
-            <nav>
+        <!-- Top Institutional Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <span class="brand-badge">PBL 2026</span>
+                <h1 class="page-title">Smart Mess Manager</h1>
+                <span class="campus-tag">Manipal University Jaipur</span>
+            </div>
+            <nav class="app-nav">
                 <a href="index.html" class="nav-link">Home</a>
-                <a href="student-dashboard.html" class="nav-link">Student</a>
+                <a href="student-dashboard.html" class="nav-link">Student Dashboard</a>
+                <a href="live-crowd.html" class="nav-link">Live Crowd Monitor <span class="nav-badge-live">LIVE</span></a>
+                <a href="admin-dashboard.html" class="nav-link active">Admin</a>
                 <a href="technical.html" class="nav-link">Technical</a>
             </nav>
         </header>
@@ -23,15 +30,15 @@
                 <h2>Total Students Today</h2>
                 <div class="stat-display">
                     <div class="stat-number" id="totalStudents">0</div>
-                    <p class="stat-label">students visited today</p>
+                    <p class="stat-label">students logged through entrance monitoring</p>
                 </div>
             </section>
 
             <!-- Peak Hour Prediction -->
             <section class="card">
-                <h2>Peak Hour Prediction</h2>
+                <h2>Peak Hour Trend Analysis</h2>
                 <div class="peak-hour">
-                    <p class="peak-text">Today's peak hours:</p>
+                    <p class="peak-text">Traffic distribution across meal slots:</p>
                     <div class="peak-chart">
                         <div class="peak-bar" style="height: 35%;" data-hour="8-9 AM">
                             <span class="peak-value">35%</span>
@@ -56,58 +63,58 @@
                         <span>6-7 PM</span>
                         <span>8-9 PM</span>
                     </div>
-                    <p class="peak-summary">Highest traffic expected at <strong>1-2 PM</strong></p>
+                    <p class="peak-summary">Highest footfall recorded at <strong>1:00 PM – 2:00 PM</strong> (Lunch Slot B)</p>
                 </div>
             </section>
 
             <!-- Food Wastage Percentage -->
             <section class="card">
-                <h2>Food Wastage Percentage</h2>
+                <h2>Food Wastage Audit</h2>
                 <div class="wastage-display">
                     <div class="wastage-circle">
-                        <div class="wastage-percentage" id="wastagePercent">15%</div>
-                        <div class="wastage-label">of total food</div>
+                        <div class="wastage-percentage" id="wastagePercent">12%</div>
+                        <div class="wastage-label">of prepared quantity unconsumed</div>
                     </div>
                     <div class="wastage-bar">
-                        <div class="wastage-fill" style="width: 15%;"></div>
+                        <div class="wastage-fill" style="width: 12%;"></div>
                     </div>
-                    <p class="wastage-note">Based on today's consumption data</p>
+                    <p class="wastage-note">Within acceptable institutional threshold (< 15%)</p>
                 </div>
             </section>
 
             <!-- Feedback Overview -->
             <section class="card">
-                <h2>Feedback Overview</h2>
+                <h2>Student Feedback Overview</h2>
                 <div class="feedback-overview">
                     <div class="feedback-stats">
                         <div class="feedback-stat">
                             <span class="stat-value" id="totalFeedback">0</span>
-                            <span class="stat-desc">Total Feedback</span>
+                            <span class="stat-desc">Total Submissions</span>
                         </div>
                         <div class="feedback-stat">
-                            <span class="stat-value" id="positiveFeedback">0</span>
-                            <span class="stat-desc">Positive</span>
+                            <span class="stat-value" id="positiveFeedback" style="color:#34d399;">0</span>
+                            <span class="stat-desc">Positive Sentiment</span>
                         </div>
                         <div class="feedback-stat">
-                            <span class="stat-value" id="negativeFeedback">0</span>
-                            <span class="stat-desc">Needs Improvement</span>
+                            <span class="stat-value" id="negativeFeedback" style="color:#f87171;">0</span>
+                            <span class="stat-desc">Needs Action</span>
                         </div>
                     </div>
                     <div class="recent-feedback" id="recentFeedback">
-                        <h3>Recent Feedback</h3>
+                        <h3>Recent Submissions</h3>
                         <div class="feedback-list" id="feedbackList">
-                            <p class="no-feedback">No feedback submitted yet.</p>
+                            <p class="no-feedback">Loading feedback data...</p>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
 
-        <footer>
+        <!-- Institutional Footer -->
+        <footer class="app-footer">
             <div class="footer-content">
-                <p><strong>Student:</strong> Akshit Makhija (2427030065)</p>
-                <p><strong>Guide:</strong> Ms. Surbhi Syal</p>
-                <p><strong>University:</strong> Manipal University Jaipur</p>
+                <p><strong>Student:</strong> Akshit Makhija (2427030065) &nbsp;|&nbsp; <strong>Project Guide:</strong> Ms. Surbhi Syal</p>
+                <p>Department of Computer Science & Engineering • Manipal University Jaipur • 2026</p>
             </div>
         </footer>
     </div>
